@@ -1,0 +1,13 @@
+<?php if($_ENV['USER']) : ?>
+
+    <?php if($this->mapApiKeyEnable) : ?>
+        <iframe src="<?=$this->baseUrl('index/map'); ?>" id="mapFrame"></iframe>
+    <?php else: ?>
+        <iframe src="<?=$this->serverTechnicalUrl('index/map'); ?>" id="mapFrame"></iframe>
+    <?php endif; ?>
+
+<?php else: ?>
+
+    <iframe src="<?=$this->baseUrl('index/map'); ?>" id="mapFrame"></iframe>
+
+<?php endif; ?>

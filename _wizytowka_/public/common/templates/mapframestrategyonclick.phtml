@@ -1,0 +1,25 @@
+<?php if($_ENV['USER']) : ?>
+
+    <?php if($this->mapApiKeyEnable) : ?>
+        <iframe data-src="<?=$this->baseUrl('index/map'); ?>" id="mapFrame"></iframe>
+    <?php else: ?>
+        <iframe data-src="<?=$this->serverTechnicalUrl('index/map'); ?>" id="mapFrame"></iframe>
+    <?php endif; ?>
+
+<?php else: ?>
+
+    <iframe data-src="<?=$this->baseUrl('index/map'); ?>" id="mapFrame"></iframe>
+
+<?php endif; ?>
+<script type="text/javascript">
+    function initMap() {
+        $('.mapInvoker').bind('click.initmap', function() {
+            $('#mapFrame').attr('src', $('#mapFrame').attr('data-src'));
+            $(this).unbind('click.initmap');
+        });
+    }
+
+    $(document).ready(function() {
+        initMap();
+    });
+</script>

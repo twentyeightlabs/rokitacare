@@ -1,0 +1,257 @@
+<script>
+
+function businessCardEditionAction(cfg) {
+    var _this = this;
+    _this.locationMap;
+    var _form = cfg.formObject;
+
+
+    this.init = function() {
+        if (typeof google === 'object' && typeof google.maps === 'object') {
+            _this.initWithoutApi();
+        } else {
+            _this.iniWithApi();
+        }
+    }
+
+    this.iniWithApi = function() {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://maps.googleapis.com/maps/api/js?region=PL' +
+        '&callback='+cfg.thisObjectName+'.init';
+        document.body.appendChild(script);
+    }
+
+    this.initWithoutApi = function() {
+        _this.bindToggleFields();
+        _this.markErrorFields();
+        _this.enableToggleFields();
+        _this.enableLocalisationMap();
+        _this.bindLoadMapFromClientDataButton();
+    }
+
+    this.bindToggleFields = function() {
+        _form.find(cfg.toggleFieldsSelector).bind('change', function() {
+            _this.toggleFields(this);
+        });
+    }
+
+    this.bindLoadMapFromClientDataButton = function() {
+        $('#localisationMapLegend').children('a').bind('click', function() {
+            _this.loadMapFromClientData();
+            return false;
+        });
+    }
+
+    this.markErrorFields = function() {
+        _form.find('ul.errors').each(function() {
+            $('#'+$(this).attr('data-related-field')).addClass(cfg.validationErrorFieldClass);
+        });
+        $('.'+cfg.validationErrorFieldClass).bind('change', function() {
+            $(this).removeClass(cfg.validationErrorFieldClass);
+        });
+    }
+
+    this.toggleFields = function(that) {
+        var relativeName = $(that).attr('id');
+        if($(that).is(':checked')) {
+            $('input[rel="'+relativeName+'"], textarea[rel="'+relativeName+'"]').removeAttr('disabled').closest('.form-field').removeClass('disabled');
+            $('.displayGroup[rel="'+relativeName+'"]').addClass('displayGroupEnabled').removeClass('displayGroupDisabled');
+        } else {
+            $('input[rel="'+relativeName+'"], textarea[rel="'+relativeName+'"]').attr('disabled', 'disabled').closest('.form-field').addClass('disabled');
+            $('.displayGroup[rel="'+relativeName+'"]').removeClass('displayGroupEnabled').addClass('displayGroupDisabled');
+        }
+    }
+
+    this.enableToggleFields = function() {
+        _form.find('input[type="checkbox"]').trigger('change');
+    }
+
+    this.enableLocalisationMap = function(refreshFromClientData) {
+
+        if(!refreshFromClientData) {
+            var mapLat = $('#' + cfg.mapParams.latSelector);
+            var mapLng = $('#' + cfg.mapParams.lngSelector);
+
+            if (mapLat.val() && mapLng.val()) {
+                var clientLocation = new google.maps.LatLng(mapLat.val(), mapLng.val());
+                _this.locationMap = _this.displayMap(_this.locationMap, clientLocation);
+                return;
+            }
+        }
+
+        var clientStreet = $('#'+cfg.mapParams.streetSelector);
+        var clientLocalNumber = $('#'+cfg.mapParams.localNumberSelector);
+        var clientZipCode = $('#'+cfg.mapParams.zipCodeSelector);
+        var clientCity = $('#'+cfg.mapParams.citySelector);
+
+        if (!clientStreet.val() || !clientLocalNumber.val() || !clientZipCode.val() || !clientCity.val()) {
+            var clientLocation = new google.maps.LatLng(cfg.mapParams.defaultLat, cfg.mapParams.defaultLng);
+            _this.locationMap = _this.displayMap(_this.locationMap, clientLocation, 6);
+            return;
+        }
+
+        if (clientStreet.val() && clientLocalNumber.val() && clientZipCode.val() && clientCity.val()) {
+            var address = clientStreet.val() + ' ' + clientLocalNumber.val() + ' ' + clientZipCode.val() + ' ' + clientCity.val();
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode( { 'address': address}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    var clientLocation = new google.maps.LatLng(results[0].geometry.location.k,results[0].geometry.location.D);
+                    _this.locationMap = _this.displayMap(_this.locationMap, clientLocation);
+                    return;
+                } else {
+                    var clientLocation = new google.maps.LatLng(cfg.mapParams.defaultLat, cfg.mapParams.defaultLng);
+                    _this.locationMap = _this.displayMap(_this.locationMap, clientLocation, 6);
+                    return;
+                }
+            });
+        }
+
+    }
+
+    this.loadMapFromClientData = function() {
+        _this.enableLocalisationMap(true);
+    }
+
+    this.displayMap = function(locationMapObject, clientLocation, mapZoom) {
+        if(!mapZoom) {
+            mapZoom = 15;
+        }
+
+        _this.showCords(clientLocation);
+        var mapOptions = {                              /* DEFINICJA PARAMETRÓW MAPY */
+            center: clientLocation,                    /* ustalenie środka mapy */
+            zoom:mapZoom,                                    /* ustalenie stopnia przybliżenia */
+
+            panControl: false,                          /* kontrolka kierunku mapy */
+            zoomControl: true,                          /* kontrolka przyblizenia */
+            zoomControlOptions: {
+                style: google.maps.ZoomControlStyle.LARGE
+            },
+            mapTypeControl: false,                       /* kontrolka typu mapy */
+            scaleControl: true,                         /* kontrolka widocznosci skali */
+            streetViewControl: false,                   /* kontrolka streetView */
+            overviewMapControl: false                  /* kontrolka małej mapy w rogu */
+
+        };
+
+        locationMapObject = new google.maps.Map(document.getElementById("mapContainer"),mapOptions);
+
+        /* DODATKOWE ELEMENTY NA MAPIE */
+        var marker = new google.maps.Marker({           /* DODAWANIE MARKERA */
+            position: clientLocation,
+            map: locationMapObject,
+            title: 'Lokalizacja - aby doprecyzować przeciągnij marker.',
+            draggable:true                              /* możliwość przenoszenia markera */
+        });
+
+        /* EVENT LISTENERS */
+
+        google.maps.event.addListener(marker, 'dragend', function(event) {  /* DODANIE ODCZYTU OPUSZCZENIA MARKERA */
+            document.getElementById(cfg.mapParams.latSelector).value = event.latLng.k;
+            document.getElementById(cfg.mapParams.lngSelector).value = event.latLng.D;
+        });
+
+        return locationMapObject;
+
+    }
+
+    this.resizeMap = function() {
+        var center = _this.locationMap.getCenter();
+        google.maps.event.trigger(_this.locationMap, "resize");
+        _this.locationMap.setCenter(center);
+    }
+
+    this.showCords = function(clientLocation) {
+        document.getElementById(cfg.mapParams.latSelector).value = clientLocation.k;
+        document.getElementById(cfg.mapParams.lngSelector).value = clientLocation.D;
+    }
+
+    this.resetForm = function(client) {
+        $('#businessCardTitle').val(client.name).change();
+
+        $('#basicInfoEnable').attr("checked", true).change();
+        $('#basicInfoSectionTitle').val('O nas').change();
+        $('#basicInfoDescription').val('Witamy na naszej stronie internetowej i zapraszamy do zapoznania się z ' +
+        'udostępnionymi informacjami. \nW przypadku pytań, zachęcamy do kontaktu bezpośredniego lub pozostawienia wiadomości e-mail. ' +
+        '\n\nPozdrawiamy serdecznie!').change();
+
+
+        $('#detailsDataEnable').attr("checked", true).change();
+        $('#detailsDataSectionTitle').val('Dane firmowe').change();
+        $('#detailsDataAddressEnable').attr("checked", true).change();
+        $('#detailsDataAddressStreet').val(client.street).change();
+        $('#detailsDataAddressLocalNumber').val(client.localNo).change();
+        $('#detailsDataAddressZipCode').val(client.postCode).change();
+        $('#detailsDataAddressCity').val(client.place).change();
+
+        $('#detailsDataPhoneEnable').attr("checked", true).change();
+        $('#detailsDataPhoneValue').val(client.phone).change();
+
+        $('#detailsDataEmailEnable').attr("checked", true).change();
+        $('#detailsDataEmailValue').val(client.clientEmail).change();
+
+        if(client.firm) {
+            $('#detailsDataNipEnable').attr("checked", true).change();
+            $('#detailsDataNipValue').val(client.nip).change();
+        } else {
+            $('#detailsDataNipEnable').attr("checked", false).change();
+            $('#detailsDataNipValue').val('').change();
+        }
+
+        $('#correspondenceDataEnable').attr("checked", true).change();
+        $('#correspondenceDataSectionTitle').val('Adres korespondencyjny').change();
+        $('#correspondenceDataAddressEnable').attr("checked", true).change();
+        $('#correspondenceDataAddressStreet').val(client.corrStreet).change();
+        $('#correspondenceDataAddressLocalNumber').val(client.corrLocalNo).change();
+        $('#correspondenceDataAddressZipCode').val(client.corrPostCode).change();
+        $('#correspondenceDataAddressCity').val(client.corrPlace).change();
+
+        $('#mapEnable').attr("checked", true).change();
+        $('#mapSectionTitle').val('Lokalizacja').change();
+        $('#mapLat').val('').change();
+        $('#mapLng').val('').change();
+
+        $('#formEnable').attr("checked", true).change();
+        $('#formSectionTitle').val('Formularz kontaktowy').change();
+
+        $('#clientEmail').val(client.clientEmail).change();
+        $('#clientName').val(client.name).change();
+
+        $('#detailsDataLinkEnable').attr("checked", false).change();
+        $('#detailsDataLinkValue').val('').change();
+
+        $('#correspondenceDataPhoneEnable').attr("checked", false).change();
+        $('#correspondenceDataPhoneValue').val('').change();
+
+        _this.enableLocalisationMap();
+    }
+
+}
+
+function enableEditionForm() {
+    var cfg = {
+        'thisObjectName' : '$businessCardEditionForm',
+        'formObject' : $('#businessCardEditionForm form'),
+        'toggleFieldsSelector' : 'input[data-onchange="toggleFields"]',
+        'validationErrorFieldClass' : 'validationError',
+        'mapParams' : {
+            'latSelector' : 'mapLat',
+            'lngSelector' : 'mapLng',
+            'streetSelector' : 'detailsDataAddressStreet',
+            'localNumberSelector' : 'detailsDataAddressLocalNumber',
+            'zipCodeSelector' : 'detailsDataAddressZipCode',
+            'citySelector' : 'detailsDataAddressCity',
+            'defaultLat' : 52.03,
+            'defaultLng' : 19.27
+        }
+    };
+
+    $businessCardEditionForm = new businessCardEditionAction(cfg);
+    $businessCardEditionForm.init();
+
+}
+enableEditionForm();
+
+
+</script>

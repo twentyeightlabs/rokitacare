@@ -1,0 +1,71 @@
+<div id="wrap">
+    <img class="bgfade bg1" src="<?=$this->tplMediaUrl('297', '/images/bg_onas.jpg'); ?>">
+	<img class="bgfade bg6" src="<?=$this->tplMediaUrl('297', '/images/bg_onas.jpg'); ?>">
+    <img class="bgfade bg2" src="<?=$this->tplMediaUrl('297', '/images/bg_dane.jpg'); ?>">
+    <img class="bgfade bg3" src="<?=$this->tplMediaUrl('297', '/images/bg_kores.jpg'); ?>">
+	<img class="bgfade bg4" src="<?=$this->tplMediaUrl('297', '/images/bg_lokal.jpg'); ?>">
+    <img class="bgfade bg5" src="<?=$this->tplMediaUrl('297', '/images/bg_form.jpg'); ?>">
+</div>
+
+<div class="row">
+    <div class="large-12 medium-12 columns content">
+	
+		<div class="overflow">
+			<nav>
+				<ul class="offerFull">
+					<li class="about">
+						<a href="<?=$this->baseUrl(); ?>#" class="menuAbout"><?php echo $this->basicInfoSectionTitle; ?></a>
+					</li>			
+
+					<li class="offer">
+						<a href="<?=$this->baseUrl(); ?>#"><?php echo $this->offerSectionTitle; ?></a>
+					</li>										
+							
+					<li class="daneFirmowe">
+						<a href="<?=$this->baseUrl(); ?>#"><?php echo $this->detailsDataSectionTitle; ?></a>
+					</li>
+							
+					<li class="daneKorespondencyjne">
+						<a href="<?=$this->baseUrl(); ?>#"><?php echo $this->correspondenceDataSectionTitle; ?></a>
+					</li>
+							
+					<li class="lokalizacja mapInvoker">
+						<a href="<?=$this->baseUrl(); ?>#"><?php echo $this->mapSectionTitle; ?></a>
+					</li>
+				</ul>
+			</nav>
+
+			<?php include 'partials/mainheader.phtml'; ?>
+
+		</div><!-- overflow -->
+
+		<div id="about">
+			<?php include 'partials/basicinfo.phtml'; ?>
+		</div><!-- about -->
+		
+		<div id="offer">
+			<?php include 'partials/offerdata.phtml'; ?>
+		</div><!-- about -->
+		
+				
+        <div id="daneFirmowe">
+			<?php include 'partials/detailsdata.phtml'; ?>
+		</div><!-- daneFirmowe -->
+		
+		<div id="daneKorespondencyjne"> 
+			<?php include 'partials/correspondencedata.phtml'; ?>
+		</div><!-- daneKorespondencyjne -->
+		
+		<div id="lokalizacja">
+			<?php include 'partials/map.phtml'; ?>
+		</div><!-- lokalizacja -->
+
+	
+	
+    </div><!-- large 12 -->
+</div><!-- row -->
+
+	
+	
+	
+	

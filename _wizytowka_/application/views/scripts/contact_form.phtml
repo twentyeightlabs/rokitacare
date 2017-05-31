@@ -1,0 +1,13 @@
+<?php
+if($this->show){
+    echo $this->form;
+
+    echo '<pre>';
+    print_r(array_keys($this->form->getElements()));
+    echo '</pre>';
+
+
+    echo $this->form->captcha->render();
+    echo $this->form->captcha->renderErrors();
+}
+?>
